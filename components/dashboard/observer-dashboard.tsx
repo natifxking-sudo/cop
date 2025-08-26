@@ -40,7 +40,7 @@ export function ObserverDashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch approved events only
-      const eventsResponse = await fetch("/api/events?status=APPROVED", {
+      const eventsResponse = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/events?status=APPROVED", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (eventsResponse.ok) {
@@ -49,7 +49,7 @@ export function ObserverDashboard() {
       }
 
       // Fetch decisions
-      const decisionsResponse = await fetch("/api/decisions?limit=20", {
+      const decisionsResponse = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/decisions?limit=20", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (decisionsResponse.ok) {

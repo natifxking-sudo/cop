@@ -3,6 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import Keycloak from "keycloak-js"
+import { persistKeycloakToken } from "@/lib/api/client"
 
 interface AuthContextType {
   keycloak: Keycloak | null
@@ -32,7 +33,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((authenticated) => {
         setKeycloak(kc)
         if (authenticated) {
-          setToken(kc.token || null)
+          const t = kc.token || null
+          setToken(t)
+          persistKeycloakToken(t)
           const profile = kc.tokenParsed as any
           const roles: string[] = profile?.realm_access?.roles || []
           setUser({ username: profile?.preferred_username || "", roles })
@@ -42,7 +45,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const refresh = setInterval(() => {
       kc.updateToken(60).then((refreshed) => {
-        if (refreshed) setToken(kc.token || null)
+        if (refreshed) {
+          const t = kc.token || null
+          setToken(t)
+          persistKeycloakToken(t)
+        }
       }).catch(() => kc.login())
     }, 30000)
 

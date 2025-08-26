@@ -138,7 +138,7 @@ export function IntelligenceMap({ className = "" }: { className?: string }) {
 
     try {
       // Load events
-      const eventsResponse = await fetch("/api/events", {
+      const eventsResponse = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/events", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (eventsResponse.ok) {
@@ -147,7 +147,7 @@ export function IntelligenceMap({ className = "" }: { className?: string }) {
       }
 
       // Load reports
-      const reportsResponse = await fetch("/api/reports", {
+      const reportsResponse = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/reports", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (reportsResponse.ok) {

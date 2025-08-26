@@ -55,7 +55,7 @@ export function HQDashboard() {
   const fetchDashboardData = async () => {
     try {
       // Fetch pending events
-      const eventsResponse = await fetch("/api/events?status=PENDING", {
+      const eventsResponse = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/events?status=PENDING", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (eventsResponse.ok) {
@@ -64,7 +64,7 @@ export function HQDashboard() {
       }
 
       // Fetch recent decisions
-      const decisionsResponse = await fetch("/api/decisions?limit=10", {
+      const decisionsResponse = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/decisions?limit=10", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (decisionsResponse.ok) {
@@ -80,7 +80,7 @@ export function HQDashboard() {
 
   const handleEventDecision = async (eventId: string, action: "approve" | "reject", reason?: string) => {
     try {
-      const response = await fetch("/api/decisions", {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/decisions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
