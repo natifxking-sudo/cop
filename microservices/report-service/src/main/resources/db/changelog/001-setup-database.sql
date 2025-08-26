@@ -1,0 +1,26 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  clearance_level VARCHAR(20) DEFAULT 'UNCLASSIFIED',
+  is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type VARCHAR(20) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content JSONB NOT NULL,
+  location GEOMETRY(POINT, 4326),
+  collection_time TIMESTAMPTZ,
+  submitted_by UUID REFERENCES users(id) NOT NULL,
+  submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  classification VARCHAR(20) DEFAULT 'UNCLASSIFIED',
+  reliability VARCHAR(10),
+  credibility VARCHAR(10),
+  status VARCHAR(20) DEFAULT 'SUBMITTED'
+);

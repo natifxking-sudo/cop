@@ -87,3 +87,16 @@ Fusion aggregates reports by AOI/time and computes a weighted confidence score u
 - Next.js API layer is currently primary for app features. Java backend has Liquibase and Keycloak security configured and can be extended into microservices.
 - MinIO is used instead of @vercel/blob.
 - Database name is `cop_prod`.
+
+## Microservices (Gateway + Report Service)
+
+- API Gateway (Spring Cloud Gateway): `cop-gateway` on port 8081; validates Keycloak JWT and routes to services
+- Report Service: `report-service` on port 8091; Liquibase migrations; protected by Keycloak
+
+Run:
+
+```bash
+docker compose up -d --build keycloak cop-gateway report-service
+```
+
+Frontend will call the gateway via `NEXT_PUBLIC_API_URL` (http://localhost:8081).
