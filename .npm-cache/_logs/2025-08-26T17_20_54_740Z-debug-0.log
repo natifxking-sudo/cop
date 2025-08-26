@@ -1,0 +1,80 @@
+0 verbose cli /home/ubuntu/.nvm/versions/node/v22.16.0/bin/node /home/ubuntu/.nvm/versions/node/v22.16.0/bin/npm
+1 info using npm@10.9.2
+2 info using node@v22.16.0
+3 silly config load:file:/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/npmrc
+4 silly config load:file:/workspace/.npmrc
+5 silly config load:file:/home/ubuntu/.npmrc
+6 silly config load:file:/home/ubuntu/.nvm/versions/node/v22.16.0/etc/npmrc
+7 verbose title npm ci
+8 verbose argv "ci" "--no-audit" "--no-fund" "--prefer-offline" "--cache" ".npm-cache"
+9 verbose logfile logs-max:10 dir:/workspace/.npm-cache/_logs/2025-08-26T17_20_54_740Z-
+10 verbose logfile /workspace/.npm-cache/_logs/2025-08-26T17_20_54_740Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest react@^16.8 || ^17.0 || ^18.0
+15 silly packumentCache full:https://registry.npmjs.org/react cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/react 146ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/react set size:undefined disposed:false
+18 silly fetch manifest react-dom@^16.8 || ^17.0 || ^18.0
+19 silly packumentCache full:https://registry.npmjs.org/react-dom cache-miss
+20 http fetch GET 200 https://registry.npmjs.org/npm 365ms
+21 http fetch GET 200 https://registry.npmjs.org/react-dom 158ms (cache miss)
+22 silly packumentCache full:https://registry.npmjs.org/react-dom set size:undefined disposed:false
+23 verbose stack Error: could not resolve
+23 verbose stack     at PlaceDep.failPeerConflict (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:503:25)
+23 verbose stack     at new PlaceDep (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:157:21)
+23 verbose stack     at #buildDepStep (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:920:18)
+23 verbose stack     at async Arborist.buildIdealTree (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:181:7)
+23 verbose stack     at async CI.exec (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/lib/commands/ci.js:63:5)
+23 verbose stack     at async Npm.exec (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/lib/npm.js:207:9)
+23 verbose stack     at async module.exports (/home/ubuntu/.nvm/versions/node/v22.16.0/lib/node_modules/npm/lib/cli/entry.js:74:5)
+24 error code ERESOLVE
+25 error ERESOLVE could not resolve
+26 error
+27 error While resolving: vaul@0.9.9
+27 error Found: react@19.1.1[2m[22m
+27 error [2mnode_modules/react[22m
+27 error   react@"19.1.1" from the root project
+27 error   [95mpeer[39m react@">=16.8.0" from @floating-ui/react-dom@2.1.6[2m[22m
+27 error   [2mnode_modules/@floating-ui/react-dom[22m
+27 error     @floating-ui/react-dom@"^2.0.0" from @radix-ui/react-popper@1.2.1[2m[22m
+27 error     [2mnode_modules/@radix-ui/react-popper[22m
+27 error       @radix-ui/react-popper@"1.2.1" from @radix-ui/react-hover-card@1.1.4[2m[22m
+27 error       [2mnode_modules/@radix-ui/react-hover-card[22m
+27 error         @radix-ui/react-hover-card@"1.1.4" from the root project
+27 error       4 more (@radix-ui/react-menu, @radix-ui/react-popover, ...)
+27 error   92 more (@radix-ui/react-accordion, ...)
+27 error
+27 error Could not resolve dependency:
+27 error [95mpeer[39m react@"^16.8 || ^17.0 || ^18.0" from vaul@0.9.9[2m[22m
+27 error [2mnode_modules/vaul[22m
+27 error   vaul@"^0.9.9" from the root project
+27 error
+27 error Conflicting peer dependency: react@18.3.1[2m[22m
+27 error [2mnode_modules/react[22m
+27 error   [95mpeer[39m react@"^16.8 || ^17.0 || ^18.0" from vaul@0.9.9[2m[22m
+27 error   [2mnode_modules/vaul[22m
+27 error     vaul@"^0.9.9" from the root project
+27 error
+27 error Fix the upstream dependency conflict, or retry
+27 error this command with --force or --legacy-peer-deps
+27 error to accept an incorrect (and potentially broken) dependency resolution.
+28 error
+28 error
+28 error For a full report see:
+28 error /workspace/.npm-cache/_logs/2025-08-26T17_20_54_740Z-eresolve-report.txt
+29 silly unfinished npm timer idealTree:buildDeps 1756228855112
+30 silly unfinished npm timer idealTree:node_modules/vaul 1756228855112
+31 verbose cwd /workspace
+32 verbose os Linux 6.1.147
+33 verbose node v22.16.0
+34 verbose npm  v10.9.2
+35 notice
+35 notice New [31mmajor[39m version of npm available! [31m10.9.2[39m -> [34m11.5.2[39m
+35 notice Changelog: [34mhttps://github.com/npm/cli/releases/tag/v11.5.2[39m
+35 notice To update run: [4mnpm install -g npm@11.5.2[24m
+35 notice  { force: true, [Symbol(proc-log.meta)]: true }
+36 verbose exit 1
+37 verbose code 1
+38 error A complete log of this run can be found in: /workspace/.npm-cache/_logs/2025-08-26T17_20_54_740Z-debug-0.log
