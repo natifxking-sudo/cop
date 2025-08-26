@@ -27,6 +27,10 @@ spring:
           uri: http://map-service:8095
           predicates:
             - Path=/api/map/**
+        - id: file-service
+          uri: http://file-service:8096
+          predicates:
+            - Path=/api/files/**
 
   security:
     oauth2:

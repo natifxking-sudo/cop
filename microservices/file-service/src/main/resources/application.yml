@@ -1,0 +1,16 @@
+server:
+  port: 8096
+
+spring:
+  application:
+    name: file-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/cop_prod
+    username: ${DB_USERNAME:cop_user}
+    password: ${DB_PASSWORD:cop_password}
+    driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/cop}

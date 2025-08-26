@@ -156,6 +156,27 @@ services:
       keycloak:
         condition: service_started
 
+  # File Service
+  file-service:
+    build:
+      context: ./microservices/file-service
+    container_name: file-service
+    environment:
+      DB_USERNAME: cop_user
+      DB_PASSWORD: cop_password
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/cop
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: cop_minio_user
+      MINIO_SECRET_KEY: cop_minio_password
+      MINIO_BUCKET: cop-files
+    networks:
+      - cop-network
+    depends_on:
+      minio:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
   # COP Platform Backend (legacy monolith)
   cop-backend:
     build:
