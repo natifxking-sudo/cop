@@ -1,6 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyToken } from "@/lib/auth/jwt"
 import { query } from "@/lib/database/connection"
+import { S3Client, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3"
+
+const s3Client = new S3Client({
+  forcePathStyle: true,
+  region: "us-east-1",
+  endpoint: process.env.MINIO_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.MINIO_ACCESS_KEY || "",
+    secretAccessKey: process.env.MINIO_SECRET_KEY || "",
+  },
+})
+
+const BUCKET = process.env.MINIO_BUCKET || "cop-files"
 
 export async function GET(request: NextRequest, { params }: { params: { fileId: string } }) {
   try {
@@ -31,15 +44,16 @@ export async function GET(request: NextRequest, { params }: { params: { fileId: 
       return NextResponse.json({ error: "Insufficient clearance" }, { status: 403 })
     }
 
-    // Fetch file from Vercel Blob
-    const response = await fetch(file.blob_url)
-    if (!response.ok) {
-      return NextResponse.json({ error: "File retrieval failed" }, { status: 500 })
-    }
+    // Use stored filename for object key
+    const objectKey = `cop-files/${file.filename}`
 
-    const fileBuffer = await response.arrayBuffer()
+    const s3Resp = await s3Client.send(
+      new GetObjectCommand({ Bucket: BUCKET, Key: objectKey }),
+    )
 
-    return new NextResponse(fileBuffer, {
+    const stream = s3Resp.Body as ReadableStream
+
+    return new NextResponse(stream as any, {
       headers: {
         "Content-Type": file.mime_type,
         "Content-Disposition": `inline; filename="${file.original_name}"`,
@@ -65,16 +79,23 @@ export async function DELETE(request: NextRequest, { params }: { params: { fileI
     }
 
     // Check if user can delete (must be uploader or HQ)
-    const result = await query("SELECT uploaded_by FROM files WHERE id = $1", [params.fileId])
+    const result = await query("SELECT uploaded_by, filename FROM files WHERE id = $1", [params.fileId])
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: "File not found" }, { status: 404 })
     }
 
     const file = result.rows[0]
-    if (file.uploaded_by !== user.id && user.role !== "HQ") {
+    if (file.uploaded_by !== user.userId && user.role !== "HQ") {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
     }
+
+    const objectKey = `cop-files/${file.filename}`
+
+    // Delete from storage first (best-effort)
+    try {
+      await s3Client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: objectKey }))
+    } catch {}
 
     // Delete from database
     await query("DELETE FROM files WHERE id = $1", [params.fileId])

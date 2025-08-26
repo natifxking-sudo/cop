@@ -13,17 +13,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user in database
-    const result = await query("SELECT * FROM users WHERE username = $1 AND is_active = true", [username])
+    const result = await query(
+      "SELECT id, username, email, role, clearance_level, is_active, password_hash FROM users WHERE username = $1 AND is_active = true",
+      [username],
+    )
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    const user = result.rows[0] as User
+    const row = result.rows[0]
+    const user = {
+      id: row.id,
+      username: row.username,
+      email: row.email,
+      role: row.role,
+      clearanceLevel: row.clearance_level,
+    } as unknown as User
 
-    // For demo purposes, we'll use a simple password check
-    // In production, you'd hash passwords properly
-    const isValidPassword = password === "cop123" || (await bcrypt.compare(password, user.password || ""))
+    const passwordHash = row.password_hash as string | null
+    if (!passwordHash) {
+      return NextResponse.json({ error: "User not provisioned with password" }, { status: 401 })
+    }
+
+    const isValidPassword = await bcrypt.compare(password, passwordHash)
 
     if (!isValidPassword) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })

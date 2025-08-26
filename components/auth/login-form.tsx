@@ -31,14 +31,6 @@ export function LoginForm() {
     setLoading(false)
   }
 
-  const demoUsers = [
-    { username: "hq_commander", role: "HQ Commander", clearance: "SECRET" },
-    { username: "socmint_analyst1", role: "SOCMINT Analyst", clearance: "SECRET" },
-    { username: "sigint_analyst1", role: "SIGINT Analyst", clearance: "TOP SECRET" },
-    { username: "humint_analyst1", role: "HUMINT Analyst", clearance: "SECRET" },
-    { username: "observer1", role: "Observer", clearance: "CONFIDENTIAL" },
-  ]
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
       <div className="w-full max-w-md space-y-6">
@@ -97,31 +89,6 @@ export function LoginForm() {
                 {loading ? "Authenticating..." : "Login"}
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white text-sm">Demo Accounts</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {demoUsers.map((user) => (
-              <div
-                key={user.username}
-                className="flex justify-between items-center p-2 bg-slate-700 rounded cursor-pointer hover:bg-slate-600"
-                onClick={() => {
-                  setUsername(user.username)
-                  setPassword("cop123")
-                }}
-              >
-                <div>
-                  <div className="text-white text-sm font-medium">{user.role}</div>
-                  <div className="text-slate-400 text-xs">{user.username}</div>
-                </div>
-                <div className="text-xs text-slate-400">{user.clearance}</div>
-              </div>
-            ))}
-            <div className="text-xs text-slate-500 mt-2">Password for all demo accounts: cop123</div>
           </CardContent>
         </Card>
       </div>

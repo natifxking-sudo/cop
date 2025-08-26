@@ -6,7 +6,7 @@ services:
     image: postgis/postgis:15-3.3
     container_name: cop-postgres
     environment:
-      POSTGRES_DB: cop_platform
+      POSTGRES_DB: cop_prod
       POSTGRES_USER: cop_user
       POSTGRES_PASSWORD: cop_password
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
@@ -14,11 +14,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/main/resources/db/migration:/docker-entrypoint-initdb.d
+      - ./scripts:/docker-entrypoint-initdb.d
     networks:
       - cop-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cop_user -d cop_platform"]
+      test: ["CMD-SHELL", "pg_isready -U cop_user -d cop_prod"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -68,7 +68,7 @@ services:
     container_name: cop-backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cop_platform
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cop_prod
       SPRING_DATASOURCE_USERNAME: cop_user
       SPRING_DATASOURCE_PASSWORD: cop_password
       SPRING_REDIS_HOST: redis
@@ -100,15 +100,43 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: cop-frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
-      NEXT_PUBLIC_WS_URL: ws://localhost:8080
+      DATABASE_URL: postgres://cop_user:cop_password@postgres:5432/cop_prod
+      JWT_SECRET: your-256-bit-secret-key-here-change-in-production
+      JWT_EXPIRES_IN: 24h
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: cop_minio_user
+      MINIO_SECRET_KEY: cop_minio_password
+      MINIO_BUCKET: cop-files
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_WS_URL: ws://localhost:3000
     ports:
       - "3000:3000"
     depends_on:
-      - cop-backend
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - cop-network
     restart: unless-stopped
+
+  # One-off admin bootstrap (run manually when needed)
+  bootstrap-admin:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      DATABASE_URL: postgres://cop_user:cop_password@postgres:5432/cop_prod
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: change_me
+    command: ["node", "scripts/bootstrap-admin.mjs"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cop-network
+    restart: "no"
 
 volumes:
   postgres_data:
