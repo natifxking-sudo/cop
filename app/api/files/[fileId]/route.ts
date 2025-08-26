@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: { fileId: 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = verifyToken(token)
+    const user = await verifyToken(token)
     if (!user) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
@@ -73,7 +73,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { fileI
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = verifyToken(token)
+    const user = await verifyToken(token)
     if (!user) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }

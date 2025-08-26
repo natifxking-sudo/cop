@@ -11,25 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Shield, Lock, User } from "lucide-react"
 
 export function LoginForm() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
-
-    const success = await login(username, password)
-
-    if (!success) {
-      setError("Invalid credentials. Please try again.")
-    }
-
-    setLoading(false)
-  }
+  const [error] = useState("")
+  const { login, loading } = useAuth()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
@@ -45,50 +28,18 @@ export function LoginForm() {
         <Card className="bg-slate-800 border-slate-700">
           <CardHeader>
             <CardTitle className="text-white">Secure Login</CardTitle>
-            <CardDescription className="text-slate-400">
-              Enter your credentials to access the intelligence platform
-            </CardDescription>
+            <CardDescription className="text-slate-400">You will be redirected to Keycloak</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="pl-10 bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-                    required
-                  />
-                </div>
-              </div>
+            {error && (
+              <Alert className="bg-red-900/20 border-red-800">
+                <AlertDescription className="text-red-400">{error}</AlertDescription>
+              </Alert>
+            )}
 
-              <div className="space-y-2">
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-                    required
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <Alert className="bg-red-900/20 border-red-800">
-                  <AlertDescription className="text-red-400">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Authenticating..." : "Login"}
-              </Button>
-            </form>
+            <Button type="button" className="w-full" disabled={loading} onClick={() => login()}>
+              {loading ? "Redirecting..." : "Login with Keycloak"}
+            </Button>
           </CardContent>
         </Card>
       </div>
