@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS files (
     event_id UUID REFERENCES events(id),
     tags JSONB DEFAULT '[]',
     checksum VARCHAR(64) NOT NULL,
-    blob_url TEXT NOT NULL,
+    s3_url TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

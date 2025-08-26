@@ -1,0 +1,33 @@
+{
+  "realm": "cop",
+  "enabled": true,
+  "displayName": "COP Realm",
+  "roles": {
+    "realm": [
+      { "name": "HQ" },
+      { "name": "ANALYST_SOCMINT" },
+      { "name": "ANALYST_SIGINT" },
+      { "name": "ANALYST_HUMINT" },
+      { "name": "OBSERVER" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "cop-frontend",
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ]
+}

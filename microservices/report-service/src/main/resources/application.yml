@@ -1,0 +1,30 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: report-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/cop_prod
+    username: ${DB_USERNAME:cop_user}
+    password: ${DB_PASSWORD:cop_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/cop}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

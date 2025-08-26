@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/changelog/001-setup-database.sql
+  - include:
+      file: classpath:db/changelog/002-create-indexes.sql
+  - include:
+      file: classpath:db/changelog/004-create-files-table.sql
+  - include:
+      file: classpath:db/changelog/005-create-notifications-table.sql

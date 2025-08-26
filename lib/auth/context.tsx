@@ -1,13 +1,15 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
-import type { User } from "../types/database"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import Keycloak from "keycloak-js"
+import { persistKeycloakToken } from "@/lib/api/client"
 
 interface AuthContextType {
-  user: User | null
+  keycloak: Keycloak | null
+  user: { username: string; roles: string[] } | null
   token: string | null
-  login: (username: string, password: string) => Promise<boolean>
+  login: () => void
   logout: () => void
   loading: boolean
 }
@@ -15,91 +17,55 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [keycloak, setKeycloak] = useState<Keycloak | null>(null)
   const [token, setToken] = useState<string | null>(null)
+  const [user, setUser] = useState<{ username: string; roles: string[] } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check for existing token on mount
-    const savedToken = localStorage.getItem("cop_token")
-    if (savedToken) {
-      setToken(savedToken)
-      fetchUserProfile(savedToken)
-    } else {
-      setLoading(false)
-    }
+    const kc = new Keycloak({
+      url: process.env.NEXT_PUBLIC_KEYCLOAK_URL!,
+      realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM!,
+      clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID!,
+    })
+
+    kc.init({ onLoad: "check-sso", pkceMethod: "S256", silentCheckSsoRedirectUri: typeof window !== "undefined" ? `${window.location.origin}/silent-check-sso.html` : undefined })
+      .then((authenticated) => {
+        setKeycloak(kc)
+        if (authenticated) {
+          const t = kc.token || null
+          setToken(t)
+          persistKeycloakToken(t)
+          const profile = kc.tokenParsed as any
+          const roles: string[] = profile?.realm_access?.roles || []
+          setUser({ username: profile?.preferred_username || "", roles })
+        }
+      })
+      .finally(() => setLoading(false))
+
+    const refresh = setInterval(() => {
+      kc.updateToken(60).then((refreshed) => {
+        if (refreshed) {
+          const t = kc.token || null
+          setToken(t)
+          persistKeycloakToken(t)
+        }
+      }).catch(() => kc.login())
+    }, 30000)
+
+    return () => clearInterval(refresh)
   }, [])
 
-  const fetchUserProfile = async (authToken: string) => {
-    try {
-      const response = await fetch("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      })
+  const value = useMemo<AuthContextType>(() => ({
+    keycloak,
+    user,
+    token,
+    login: () => keycloak?.login(),
+    logout: () => keycloak?.logout({ redirectUri: typeof window !== "undefined" ? window.location.origin : undefined }),
+    loading,
+  }), [keycloak, user, token, loading])
 
-      if (response.ok) {
-        const userData = await response.json()
-        setUser(userData)
-      } else {
-        // Token is invalid, clear it
-        localStorage.removeItem("cop_token")
-        setToken(null)
-      }
-    } catch (error) {
-      console.error("[v0] Failed to fetch user profile:", error)
-      localStorage.removeItem("cop_token")
-      setToken(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const login = async (username: string, password: string): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setToken(data.token)
-        setUser(data.user)
-        localStorage.setItem("cop_token", data.token)
-        return true
-      } else {
-        return false
-      }
-    } catch (error) {
-      console.error("[v0] Login failed:", error)
-      return false
-    }
-  }
-
-  const logout = async () => {
-    try {
-      if (token) {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      }
-    } catch (error) {
-      console.error("[v0] Logout error:", error)
-    } finally {
-      setUser(null)
-      setToken(null)
-      localStorage.removeItem("cop_token")
-    }
-  }
-
-  return <AuthContext.Provider value={{ user, token, login, logout, loading }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

@@ -1,0 +1,45 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: cop-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: report-service
+          uri: http://report-service:8091
+          predicates:
+            - Path=/api/reports/**
+        - id: fusion-service
+          uri: http://fusion-service:8092
+          predicates:
+            - Path=/api/fusion/**
+        - id: decision-service
+          uri: http://decision-service:8093
+          predicates:
+            - Path=/api/decisions/**
+        - id: notification-service
+          uri: http://notification-service:8094
+          predicates:
+            - Path=/api/notifications/**
+        - id: map-service
+          uri: http://map-service:8095
+          predicates:
+            - Path=/api/map/**
+        - id: file-service
+          uri: http://file-service:8096
+          predicates:
+            - Path=/api/files/**
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/cop}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"

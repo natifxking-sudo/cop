@@ -1,0 +1,11 @@
+server:
+  port: 8093
+
+spring:
+  application:
+    name: decision-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/cop}

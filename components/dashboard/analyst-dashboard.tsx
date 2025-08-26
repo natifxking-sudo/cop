@@ -66,7 +66,7 @@ export function AnalystDashboard() {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch("/api/reports", {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/reports", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (response.ok) {
@@ -101,7 +101,7 @@ export function AnalystDashboard() {
         collectionTime: new Date().toISOString(),
       }
 
-      const response = await fetch("/api/reports", {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_URL + "/api/reports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -50,20 +50,6 @@ class FileStorageService {
     return response.blob()
   }
 
-  async getFileMetadata(fileId: string): Promise<FileMetadata> {
-    const response = await fetch(`${this.baseUrl}/${fileId}/metadata`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error("File metadata retrieval failed")
-    }
-
-    return response.json()
-  }
-
   async deleteFile(fileId: string): Promise<void> {
     const response = await fetch(`${this.baseUrl}/${fileId}`, {
       method: "DELETE",

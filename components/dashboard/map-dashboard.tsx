@@ -31,7 +31,7 @@ export function MapDashboard() {
 
   const loadTimelineData = async () => {
     try {
-      const response = await fetch("/api/events", {
+      const response = await fetch((process.env.NEXT_PUBLIC_API_URL as string) + "/api/events", {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (response.ok) {
