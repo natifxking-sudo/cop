@@ -104,6 +104,58 @@ services:
     networks:
       - cop-network
 
+  # Fusion Service
+  fusion-service:
+    build:
+      context: ./microservices/fusion-service
+    container_name: fusion-service
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/cop
+    networks:
+      - cop-network
+    depends_on:
+      keycloak:
+        condition: service_started
+
+  # Decision Service
+  decision-service:
+    build:
+      context: ./microservices/decision-service
+    container_name: decision-service
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/cop
+    networks:
+      - cop-network
+    depends_on:
+      keycloak:
+        condition: service_started
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./microservices/notification-service
+    container_name: notification-service
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/cop
+    networks:
+      - cop-network
+    depends_on:
+      keycloak:
+        condition: service_started
+
+  # Map Service
+  map-service:
+    build:
+      context: ./microservices/map-service
+    container_name: map-service
+    environment:
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/cop
+    networks:
+      - cop-network
+    depends_on:
+      keycloak:
+        condition: service_started
+
   # COP Platform Backend (legacy monolith)
   cop-backend:
     build:

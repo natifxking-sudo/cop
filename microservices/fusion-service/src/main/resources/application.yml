@@ -1,0 +1,11 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: fusion-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://keycloak:8080/realms/cop}
