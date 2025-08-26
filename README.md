@@ -29,8 +29,15 @@ A Common Operational Picture (COP) intelligence collaboration platform that fuse
 
 ## Prerequisites
 
-- Node.js 18+ (Node 20 LTS recommended)
+- Node.js 20 LTS (required)
+- npm 10+ (npm 11 recommended)
 - Docker + Docker Compose
+
+### Node and package manager notes
+
+- This repo uses npm. The `pnpm-lock.yaml` has been removed to avoid resolver conflicts.
+- The frontend `Dockerfile.frontend` now uses `node:20-alpine` to match local Node 20.
+- If you previously installed with a different Node version, remove `node_modules` and `package-lock.json` and reinstall with Node 20.
 
 ## Environment Variables
 
@@ -87,6 +94,30 @@ Fusion aggregates reports by AOI/time and computes a weighted confidence score u
 - Next.js API layer is currently primary for app features. Java backend has Liquibase and Keycloak security configured and can be extended into microservices.
 - MinIO is used instead of @vercel/blob.
 - Database name is `cop_prod`.
+
+## Frontend dependency versions and compatibility
+
+- React 18.3.1 and React DOM 18.3.1 are pinned for compatibility with `vaul@0.9.9` and Radix UI packages.
+- Next.js 15.2.4 is used; TypeScript and ESLint checks are skipped during production build (see `next.config.mjs`).
+- Problematic or unnecessary packages that previously caused resolver issues have been removed:
+  - Removed `crypto`, `http`, `bufferutil`, and `utf-8-validate` direct dependencies (Node core or ws optionals).
+  - Pinned formerly `latest` packages (e.g., `maplibre-gl`, `ws`, `uuid`, `jsonwebtoken`, `bcryptjs`, Radix components).
+
+### Clean install instructions
+
+If you hit dependency resolver errors locally:
+
+```bash
+rm -rf node_modules package-lock.json
+nvm use 20 || volta pin node@20 || echo "Ensure Node 20 is active"
+npm install --no-audit --no-fund
+```
+
+### Troubleshooting
+
+- ERESOLVE/peer dependency conflicts: ensure Node 20 and npm >=10, then do a clean install as above.
+- MapLibre build issues: ensure `serverExternalPackages` in `next.config.mjs` is intact and you are on Node 20.
+- Docker build uses `npm config set legacy-peer-deps true` during deps stage to avoid peer stalls in CI.
 
 ## Microservices (Gateway + Report Service)
 
