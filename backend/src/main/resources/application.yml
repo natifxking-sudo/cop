@@ -8,7 +8,7 @@ spring:
     name: cop-platform
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/cop_platform
+    url: jdbc:postgresql://localhost:5432/cop_prod
     username: ${DB_USERNAME:cop_user}
     password: ${DB_PASSWORD:cop_password}
     driver-class-name: org.postgresql.Driver
@@ -33,7 +33,17 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-# JWT Configuration
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8085/realms/cop}
+
+# JWT Configuration (legacy; to be removed after Keycloak fully integrated)
 jwt:
   secret: ${JWT_SECRET:mySecretKey}
   expiration: 86400000 # 24 hours
@@ -48,6 +58,6 @@ minio:
 # Logging
 logging:
   level:
-    com.cop: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
+    com.cop: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO

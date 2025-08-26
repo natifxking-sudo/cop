@@ -4,178 +4,86 @@ A Common Operational Picture (COP) intelligence collaboration platform that fuse
 
 ## Monorepo Layout
 
-- `backend/` Java Spring Boot service (single service skeleton with entities/repositories; Dockerfile provided)
+- `backend/` Java Spring Boot service (Liquibase migrations; Keycloak resource server ready)
 - Frontend (Next.js/TypeScript) at repo root with API routes under `app/api/*`
-- Infra: `docker-compose.yml`, SQL init scripts in `scripts/`
+- Infra: `docker-compose.yml`, SQL/Liquibase under `backend/src/main/resources/db/changelog` and helper scripts in `scripts/`
 
 ## Core Capabilities
 
-- Role-based login and protected routes (JWT in Next.js)
+- Role-based login and protected routes (Keycloak-ready; temporary JWT still supported in Next API)
 - Intelligence ingestion (SOCMINT, SIGINT, HUMINT) via `POST /api/reports`
 - Fusion service to correlate reports into events with confidence scoring
 - COP Map with MapLibre layers, timeline control, and event markers
 - HQ decisions: approve/reject events and request information from analysts
 - Observer view: HQ-approved events and decision summaries
-- Evidence management: file uploads, metadata, and access based on clearance
+- Evidence management: file uploads to MinIO, metadata, and access based on clearance
 - Notifications and basic chat channels
 
 ## Architecture Overview
 
-- Frontend: Next.js 15 + TypeScript + Tailwind. API routes implement auth, reports, fusion, decisions, files, notifications.
-- Database: PostgreSQL + PostGIS with schema for users, reports, events, fusion provenance, decisions, files, audit logs.
-- Storage: File metadata in DB, binary stored via `@vercel/blob` in this build (can be swapped for MinIO).
-- Realtime: WebSocket service abstraction for feeds (reports, events, decisions).
-- Backend (Java): Spring Boot 3 skeleton with entities/repositories; Dockerfile builds a service (not required to run the app in this build as Next API provides endpoints).
+- Frontend: Next.js 15 + TypeScript + Tailwind.
+- Database: PostgreSQL + PostGIS (DB name `cop_prod`).
+- Storage: MinIO (S3-compatible) for binary; metadata in Postgres (`files.s3_url`).
+- Realtime: WebSocket feed.
+- Backend (Java): Spring Boot 3 with Liquibase and OAuth2 Resource Server for Keycloak.
 
 ## Prerequisites
 
 - Node.js 18+ (Node 20 LTS recommended)
-- PostgreSQL 15 with PostGIS extension
-- Redis (optional; referenced in docker-compose)
-- Docker (optional; if you want to run via compose)
+- Docker + Docker Compose
 
 ## Environment Variables
 
 Frontend (Next.js):
-- `DATABASE_URL` (e.g. `postgres://cop_user:cop_password@localhost:5432/cop_platform`)
-- `JWT_SECRET` (default: `cop-platform-secret-key`)
+- `DATABASE_URL` (e.g. `postgres://cop_user:cop_password@localhost:5432/cop_prod`)
+- `JWT_SECRET` (temporary for Next API):
 - `JWT_EXPIRES_IN` (default: `24h`)
 - `NEXT_PUBLIC_API_URL` (default: `http://localhost:3000`)
 - `NEXT_PUBLIC_WS_URL` (default: `ws://localhost:3000`)
-- `BLOB_READ_WRITE_TOKEN` (if using @vercel/blob in production)
+- `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`
+- `NEXT_PUBLIC_KEYCLOAK_URL`, `NEXT_PUBLIC_KEYCLOAK_REALM`, `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID`
 
-Backend (Spring): see `backend/src/main/resources/application.yml` and `application-docker.yml`.
+Backend (Spring): see `backend/src/main/resources/application.yml`.
 
-## Database Setup
+## Running via Docker Compose
 
-Run the SQL scripts in order against your database:
-
-```sql
-\i scripts/001-setup-database.sql
-\i scripts/002-create-indexes.sql
-\i scripts/003-seed-test-data.sql
-\i scripts/004-create-files-table.sql
-\i scripts/005-create-notifications-table.sql
-```
-
-Ensure PostGIS is enabled:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-```
-
-## Running Locally (without Docker)
-
-1) Install dependencies (use legacy peer deps to avoid React 19 peer warnings):
+Bring up core services (Postgres, Redis, MinIO, Keycloak) and frontend/backend:
 
 ```bash
-npm install --no-audit --no-fund --legacy-peer-deps
+docker compose up -d --build postgres redis minio keycloak cop-backend cop-frontend
 ```
 
-Note: `pg-native` may try to compile; ensure PostgreSQL client is installed or remove `pg-native` from package.json if unnecessary.
-
-2) Set environment variables (example for bash):
+Bootstrap an admin user in the DB for Next.js API login (optional):
 
 ```bash
-export DATABASE_URL=postgres://cop_user:cop_password@localhost:5432/cop_platform
-export JWT_SECRET="your-dev-secret"
-export NEXT_PUBLIC_API_URL=http://localhost:3000
-export NEXT_PUBLIC_WS_URL=ws://localhost:3000
+docker compose run --rm bootstrap-admin
 ```
 
-3) Start dev server:
-
-```bash
-npm run dev
-```
-
-4) Open `http://localhost:3000`.
-
-## Running via Docker Compose (optional)
-
-Docker is not required for this build since Next.js implements the APIs. If you want infrastructure via compose:
-
-- Postgres (with PostGIS) and Redis/MinIO are defined in `docker-compose.yml`.
-- Frontend container builds using `Dockerfile.frontend`.
-
-Bring up infra only:
-
-```bash
-docker compose up -d postgres redis minio
-```
-
-Bring up frontend (after infra is ready):
-
-```bash
-docker compose up --build cop-frontend
-```
-
-## Frontend APIs (Next.js)
-
-- `POST /api/auth/login` – JWT issuance
-- `GET /api/auth/me` – current user
-- `POST /api/reports` – create report
-- `GET /api/reports` – list reports
-- `POST /api/fusion` – fuse reports into event
-- `GET /api/events` – list events
-- `POST /api/decisions` – create/approve/reject decisions
-- `GET /api/decisions` – list decisions
-- `POST /api/files/upload` – upload evidence
-- `GET /api/files/:fileId` – retrieve evidence
-- `GET /api/websocket` – WebSocket endpoint
-
-See `app/api/*` for full details.
+Open:
+- Frontend: http://localhost:3000
+- Keycloak: http://localhost:8085 (realm `cop`)
 
 ## Data Model (Key Tables)
 
-- `users` (id, username, email, role, clearance_level, is_active)
+- `users` (id, username, email, role, clearance_level, password_hash, is_active)
 - `reports` (id, type, title, content JSONB, location GEOMETRY(Point,4326), classification, reliability, credibility, status)
 - `events` (id, type, title, description, start_time, end_time, location, area_of_interest, confidence_score, status)
 - `fusion_provenance` (id, event_id, source_report_id, fusion_algorithm, weight)
-- `decisions` (id, decision_type, title, description, decision_maker, related_event_id, status, classification)
-- `files` (id, filename, blob_url, classification, report_id, event_id, checksum, tags)
-- `audit_logs`, `qa_threads`
+- `files` (id, filename, s3_url, classification, report_id, event_id, checksum, tags)
+- `audit_logs`, `qa_threads`, `notifications`, `chat_messages`
 
 ## Roles & Access Control
 
-- Roles: HQ, ANALYST_SOCMINT, ANALYST_SIGINT, ANALYST_HUMINT, OBSERVER
+- Roles: HQ, ANALYST_SOCMINT, ANALYST_SIGINT, ANALYST_HUMINT, OBSERVER (Keycloak realm roles)
 - Field-level access: evidence download checks `clearanceLevel` vs file classification
-- Route protection via `lib/auth/middleware` and JWT in requests
+- Spring Security Resource Server for Keycloak (`issuer-uri` configurable)
 
 ## Fusion & Confidence Scoring
 
-The fusion service aggregates reports by AOI/time and computes a weighted confidence score using:
-- Source reliability and information credibility
-- Report recency
-- Source diversity bonus
+Fusion aggregates reports by AOI/time and computes a weighted confidence score using recency, reliability/credibility, and source diversity. See `lib/services/fusion-service.ts`.
 
-See `lib/services/fusion-service.ts` for details.
+## Notes
 
-## Map & Timeline
-
-- MapLibre for layers and markers (`components/map/*`)
-- Timeline controls to filter visible events
-
-## Notifications & Chat
-
-- Notifications persisted in `notifications` table
-- Chat channels persisted in `chat_messages` (basic)
-
-## Testing
-
-- Frontend uses Next API routes; add unit tests as needed
-- SQL scripts include seed data for manual verification
-
-## Limitations & Notes
-
-- Spring Boot backend is provided as a scaffold and not wired into the running stack (Next.js APIs are primary API layer here). If you prefer Java microservices, extend `backend/` with controllers/security/DTOs and point the frontend to `NEXT_PUBLIC_API_URL` of the Java gateway.
-- File storage currently uses `@vercel/blob`. For MinIO, replace upload/get logic in `app/api/files/*` to use MinIO SDK and configure `MINIO_*` envs.
-- To avoid native build issues (`pg-native`, `libpq`), prefer pure JS `pg` driver only.
-
-## Next Steps
-
-- Replace `@vercel/blob` with MinIO integration for on-prem storage
-- Harden authentication via Keycloak and enforce RBAC/ABAC at API level
-- Add CI pipelines and test suites
-- Containerize the Next API + DB with health checks for production
+- Next.js API layer is currently primary for app features. Java backend has Liquibase and Keycloak security configured and can be extended into microservices.
+- MinIO is used instead of @vercel/blob.
+- Database name is `cop_prod`.
